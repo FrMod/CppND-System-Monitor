@@ -69,7 +69,7 @@ vector<int> LinuxParser::Pids() {
 }
 
 // TODO: Read and return the system memory utilization
-float LinuxParser::MemoryUtilization() { 
+float LinuxParser::MemoryUtilization() {
   string line;
   string key;
   string value;
@@ -85,35 +85,32 @@ float LinuxParser::MemoryUtilization() {
       // std::replace(line.begin(), line.end(), ':', ' ');
       std::istringstream linestream(line);
       while (linestream >> key >> value) {
-        try{
+        try {
           if (key == "MemTotal:") {
             mem_total = std::stol(value, &size, 10);
-          }
-          else if (key == "MemFree:") {
-            mem_free = std::stol(value, &size,10);
-          }
-          else if (key == "Buffers:") {
+          } else if (key == "MemFree:") {
+            mem_free = std::stol(value, &size, 10);
+          } else if (key == "Buffers:") {
             buffers = std::stol(value, &size, 10);
-          }
-          else if (key == "Cached:") {
+          } else if (key == "Cached:") {
             cached = std::stol(value, &size, 10);
-          }
-          else if (key == "SReclaimable:") {
+          } else if (key == "SReclaimable:") {
             reclaimable = std::stol(value, &size, 10);
-          }
-          else if (key == "Shmem:") {
+          } else if (key == "Shmem:") {
             shmem = std::stol(value, &size, 10);
           }
         }
-      // catch invalid_argument exception. 
-      catch(const std::invalid_argument){ 
-        continue; 
-      } 
+        // catch invalid_argument exception.
+        catch (const std::invalid_argument) {
+          continue;
+        }
       }
     }
     filestream.close();
   }
-  return (float)(mem_total - mem_free - (buffers + cached + reclaimable -shmem))/mem_total;   //- (buffers + cached + reclaimable -shmem)
+  return (float)(mem_total - mem_free -
+                 (buffers + cached + reclaimable - shmem)) /
+         mem_total;  //- (buffers + cached + reclaimable -shmem)
 }
 
 // TODO: Read and return the system uptime
