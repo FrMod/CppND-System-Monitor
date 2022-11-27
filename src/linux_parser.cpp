@@ -68,7 +68,45 @@ vector<int> LinuxParser::Pids() {
 }
 
 // TODO: Read and return the system memory utilization
-float LinuxParser::MemoryUtilization() { return 0.0; }
+float LinuxParser::MemoryUtilization() { 
+  string line;
+  string key;
+  string value;
+
+  long mem_total, mem_free, buffers, cached, reclaimable, shmem = 0;
+
+  std::ifstream filestream(kProcDirectory + kMeminfoFilename);
+  if (filestream.is_open()) {
+    while (std::getline(filestream, line)) {
+      line.replace(line.end()-3, line.end(), 1, '\0');
+      std::replace(line.begin(), line.end(), ' ', '\0');
+      std::replace(line.begin(), line.end(), ':', ' ');
+      std::istringstream linestream(line);
+      while (linestream >> key >> value) {
+        if (key == "MemTotal") {
+          mem_total = std::stol(value);
+        }
+        else if (key == "MemFree") {
+          mem_free = std::stol(value);
+        }
+        else if (key == "Buffers") {
+          buffers = std::stol(value);
+        }
+        else if (key == "Cached") {
+          cached = std::stol(value);
+        }
+        else if (key == "SReclaimable") {
+          reclaimable = std::stol(value);
+        }
+        else if (key == "Shmem") {
+          shmem = std::stol(value);
+        }
+      }
+    }
+    filestream.close();
+  }
+  return (float)(mem_total - mem_free - (buffers + cached + reclaimable -shmem))/mem_total;
+}
 
 // TODO: Read and return the system uptime
 long LinuxParser::UpTime() { return 0; }
