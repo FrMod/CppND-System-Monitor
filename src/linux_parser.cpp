@@ -168,6 +168,7 @@ long LinuxParser::IdleJiffies() {
       }
     } 
     idle_jiffies = std::stol(tmp[3]) + std::stol(tmp[4]);    // sum idle and iowait
+  }
   return idle_jiffies;
 }
 
