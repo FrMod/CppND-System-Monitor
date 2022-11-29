@@ -153,18 +153,21 @@ long LinuxParser::ActiveJiffies() {
 
 // TODO: Read and return the number of idle jiffies for the system
 long LinuxParser::IdleJiffies() {
-  string line, token;
+  string line, key, payload, token;
   long idle_jiffies = 0;
   std::vector<std::string> tmp; 
   std::ifstream stream(kProcDirectory + kStatFilename);
   if (stream.is_open()) {
     std::getline(stream, line);
     std::istringstream linestream(line);
-    while (std::getline(linestream, token, ' ')) {
-      tmp.push_back(token);
-    }
+    linestream >> key >> payload;
+    if (key == "cpu") {
+      std::istringstream linestream(payload);
+      while(std::getline(linestream, token, ' ')){
+        tmp.push_back(token);
+      }
+    } 
     idle_jiffies = std::stol(tmp[3]) + std::stol(tmp[4]);    // sum idle and iowait
-  }
   return idle_jiffies;
 }
 
