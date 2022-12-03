@@ -133,7 +133,7 @@ long LinuxParser::Jiffies() {
 // REMOVE: [[maybe_unused]] once you define the function
 long LinuxParser::ActiveJiffies(int pid [[maybe_unused]]) { return 0; }
 
-// TODO: Read and return the number of active jiffies for the system
+// Read and return the number of active jiffies for the system
 long LinuxParser::ActiveJiffies() {
   string line, key, payload, token;
   long active_jiffies = 0;
@@ -175,7 +175,7 @@ long LinuxParser::IdleJiffies() {
   return idle_jiffies / sysconf(_SC_CLK_TCK);
 }
 
-// TODO: Read and return CPU utilization
+// Read and return CPU utilization
 vector<string> LinuxParser::CpuUtilization() {
   vector<string> cpu_util;
   string line, key, payload, token;
@@ -195,11 +195,46 @@ vector<string> LinuxParser::CpuUtilization() {
   return cpu_util;
 }
 
-// TODO: Read and return the total number of processes
-int LinuxParser::TotalProcesses() { return 0; }
+// Read and return the total number of processes
+int LinuxParser::TotalProcesses() {
+  string line, key, payload;
+  int total_processes;
+  std::ifstream filestream(kProcDirectory + kStatFilename);
+  if (filestream.is_open()) {
+    while (std::getline(filestream, line)) {
+      std::istringstream linestream(line);
+      while (linestream >> key >> payload) {
+        if(key == "processes"){
+          total_processes =  std::stoi(payload);
+          return total_processes;
+        }
+      }
+    }
+    filestream.close(); 
+   }
+    return total_processes;
+  }
+    
 
 // TODO: Read and return the number of running processes
-int LinuxParser::RunningProcesses() { return 0; }
+int LinuxParser::RunningProcesses() {  
+  string line, key, payload;
+  int running_processes;
+  std::ifstream filestream(kProcDirectory + kStatFilename);
+  if (filestream.is_open()) {
+    while (std::getline(filestream, line)) {
+      std::istringstream linestream(line);
+      while (linestream >> key >> payload) {
+        if(key == "procs_running"){
+          running_processes =  std::stoi(payload);
+          return running_processes;
+        }
+      }
+    }
+    filestream.close(); 
+   }
+    return running_processes;
+  }
 
 // TODO: Read and return the command associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
