@@ -124,14 +124,33 @@ long LinuxParser::UpTime() {
 }
 
 // Read and return the number of jiffies for the system
-long LinuxParser::Jiffies() { 
+long LinuxParser::Jiffies() {
   long uptime = LinuxParser::UpTime();
   return uptime * sysconf(_SC_CLK_TCK);
-  }
+}
 
 // TODO: Read and return the number of active jiffies for a PID
 // REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::ActiveJiffies(int pid [[maybe_unused]]) { return 0; }
+long LinuxParser::ActiveJiffies(int pid) {
+  string line, key, payload, token;
+  long active_jiffies = 0;
+  long utime, stime, cutime, cstime, to_be_skipped;
+  std::ifstream stream(kProcDirectory + std::to_string(pid) + kStatFilename);
+  if (stream.is_open()) {
+    std::getline(stream, line);
+    std::istringstream linestream(line);
+    int counter{0};
+    while (counter++ < 13) {
+      linestream >> to_be_skipped;
+    }
+    linestream >> utime >> stime >> cutime >> cstime;
+    active_jiffies = (utime + stime + cutime + cstime) / sysconf(_SC_CLK_TCK);
+    stream.close();
+    return active_jiffies;
+  }
+  stream.close();
+  return active_jiffies;
+}
 
 // Read and return the number of active jiffies for the system
 long LinuxParser::ActiveJiffies() {
@@ -142,12 +161,12 @@ long LinuxParser::ActiveJiffies() {
     std::getline(stream, line);
     std::istringstream linestream(line);
     linestream >> key >> payload;
-      if (key == "cpu") {
-        std::istringstream linestream(payload);
-        while(std::getline(linestream, token, ' ')){
-          active_jiffies += std::stol(token);
-        }
-      } 
+    if (key == "cpu") {
+      std::istringstream linestream(payload);
+      while (std::getline(linestream, token, ' ')) {
+        active_jiffies += std::stol(token);
+      }
+    }
   }
   stream.close();
   return active_jiffies / (sysconf(_SC_CLK_TCK));
@@ -157,7 +176,7 @@ long LinuxParser::ActiveJiffies() {
 long LinuxParser::IdleJiffies() {
   string line, key, payload, token;
   long idle_jiffies = 0;
-  vector<string> tmp; 
+  vector<string> tmp;
   std::ifstream stream(kProcDirectory + kStatFilename);
   if (stream.is_open()) {
     std::getline(stream, line);
@@ -165,11 +184,12 @@ long LinuxParser::IdleJiffies() {
     linestream >> key >> payload;
     if (key == "cpu") {
       std::istringstream linestream(payload);
-      while(std::getline(linestream, token, ' ')){
+      while (std::getline(linestream, token, ' ')) {
         tmp.push_back(token);
       }
-    } 
-    idle_jiffies = std::stol(tmp[3]) + std::stol(tmp[4]);    // sum idle and iowait
+    }
+    idle_jiffies =
+        std::stol(tmp[3]) + std::stol(tmp[4]);  // sum idle and iowait
   }
   stream.close();
   return idle_jiffies / sysconf(_SC_CLK_TCK);
@@ -186,10 +206,10 @@ vector<string> LinuxParser::CpuUtilization() {
     linestream >> key >> payload;
     if (key == "cpu") {
       std::istringstream linestream(payload);
-      while(std::getline(linestream, token, ' ')){
+      while (std::getline(linestream, token, ' ')) {
         cpu_util.push_back(token);
       }
-    } 
+    }
   }
   stream.close();
   return cpu_util;
@@ -204,20 +224,19 @@ int LinuxParser::TotalProcesses() {
     while (std::getline(filestream, line)) {
       std::istringstream linestream(line);
       while (linestream >> key >> payload) {
-        if(key == "processes"){
-          total_processes =  std::stoi(payload);
+        if (key == "processes") {
+          total_processes = std::stoi(payload);
           return total_processes;
         }
       }
     }
-    filestream.close(); 
-   }
-    return total_processes;
+    filestream.close();
   }
-    
+  return total_processes;
+}
 
 // TODO: Read and return the number of running processes
-int LinuxParser::RunningProcesses() {  
+int LinuxParser::RunningProcesses() {
   string line, key, payload;
   int running_processes;
   std::ifstream filestream(kProcDirectory + kStatFilename);
@@ -225,16 +244,16 @@ int LinuxParser::RunningProcesses() {
     while (std::getline(filestream, line)) {
       std::istringstream linestream(line);
       while (linestream >> key >> payload) {
-        if(key == "procs_running"){
-          running_processes =  std::stoi(payload);
+        if (key == "procs_running") {
+          running_processes = std::stoi(payload);
           return running_processes;
         }
       }
     }
-    filestream.close(); 
-   }
-    return running_processes;
+    filestream.close();
   }
+  return running_processes;
+}
 
 // TODO: Read and return the command associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
