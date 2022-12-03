@@ -119,6 +119,7 @@ long LinuxParser::UpTime() {
     std::istringstream linestream(line);
     linestream >> uptime;
   }
+  stream.close();
   return std::stol(uptime);
 }
 
@@ -148,14 +149,15 @@ long LinuxParser::ActiveJiffies() {
         }
       } 
   }
-  return active_jiffies;
+  stream.close();
+  return active_jiffies / (sysconf(_SC_CLK_TCK));
 }
 
 // TODO: Read and return the number of idle jiffies for the system
 long LinuxParser::IdleJiffies() {
   string line, key, payload, token;
   long idle_jiffies = 0;
-  std::vector<std::string> tmp; 
+  vector<string> tmp; 
   std::ifstream stream(kProcDirectory + kStatFilename);
   if (stream.is_open()) {
     std::getline(stream, line);
@@ -169,11 +171,29 @@ long LinuxParser::IdleJiffies() {
     } 
     idle_jiffies = std::stol(tmp[3]) + std::stol(tmp[4]);    // sum idle and iowait
   }
-  return idle_jiffies;
+  stream.close();
+  return idle_jiffies / sysconf(_SC_CLK_TCK);
 }
 
 // TODO: Read and return CPU utilization
-vector<string> LinuxParser::CpuUtilization() { return {}; }
+vector<string> LinuxParser::CpuUtilization() {
+  vector<string> cpu_util;
+  string line, key, payload, token;
+  std::ifstream stream(kProcDirectory + kStatFilename);
+  if (stream.is_open()) {
+    std::getline(stream, line);
+    std::istringstream linestream(line);
+    linestream >> key >> payload;
+    if (key == "cpu") {
+      std::istringstream linestream(payload);
+      while(std::getline(linestream, token, ' ')){
+        cpu_util.push_back(token);
+      }
+    } 
+  }
+  stream.close();
+  return cpu_util;
+}
 
 // TODO: Read and return the total number of processes
 int LinuxParser::TotalProcesses() { return 0; }
