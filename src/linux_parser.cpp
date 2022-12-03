@@ -154,59 +154,29 @@ long LinuxParser::ActiveJiffies(int pid) {
 
 // Read and return the number of active jiffies for the system
 long LinuxParser::ActiveJiffies() {
-  string line, key, payload, token;
-  long active_jiffies = 0;
-  std::ifstream stream(kProcDirectory + kStatFilename);
-  if (stream.is_open()) {
-    std::getline(stream, line);
-    std::istringstream linestream(line);
-    linestream >> key >> payload;
-    if (key == "cpu") {
-      std::istringstream linestream(payload);
-      while (std::getline(linestream, token, ' ')) {
-        active_jiffies += std::stol(token);
-      }
-    }
-  }
-  stream.close();
-  return active_jiffies / (sysconf(_SC_CLK_TCK));
+  auto jiffies  = LinuxParser::CpuUtilization();
+  return std::stol(jiffies[CPUStates::kUser_]) + std::stol(jiffies[CPUStates::kNice_]) +
+        std::stol(jiffies[CPUStates::kSystem_]) + std::stol(jiffies[CPUStates::kIRQ_]) +
+        std::stol(jiffies[CPUStates::kSoftIRQ_]) + std::stol(jiffies[CPUStates::kSteal_]);    
 }
 
 // TODO: Read and return the number of idle jiffies for the system
 long LinuxParser::IdleJiffies() {
-  string line, key, payload, token;
-  long idle_jiffies = 0;
-  vector<string> tmp;
-  std::ifstream stream(kProcDirectory + kStatFilename);
-  if (stream.is_open()) {
-    std::getline(stream, line);
-    std::istringstream linestream(line);
-    linestream >> key >> payload;
-    if (key == "cpu") {
-      std::istringstream linestream(payload);
-      while (std::getline(linestream, token, ' ')) {
-        tmp.push_back(token);
-      }
-    }
-    idle_jiffies =
-        std::stol(tmp[3]) + std::stol(tmp[4]);  // sum idle and iowait
-  }
-  stream.close();
-  return idle_jiffies / sysconf(_SC_CLK_TCK);
+  auto jiffies  = LinuxParser::CpuUtilization();
+  return std::stol(jiffies[CPUStates::kIdle_]) + std::stol(jiffies[CPUStates::kIOwait_]);  
 }
 
 // Read and return CPU utilization
 vector<string> LinuxParser::CpuUtilization() {
   vector<string> cpu_util;
-  string line, key, payload, token;
+  string line, key, token;
   std::ifstream stream(kProcDirectory + kStatFilename);
   if (stream.is_open()) {
     std::getline(stream, line);
     std::istringstream linestream(line);
-    linestream >> key >> payload;
+    linestream >> key;
     if (key == "cpu") {
-      std::istringstream linestream(payload);
-      while (std::getline(linestream, token, ' ')) {
+      while (linestream >> token) {
         cpu_util.push_back(token);
       }
     }
@@ -238,7 +208,7 @@ int LinuxParser::TotalProcesses() {
 // TODO: Read and return the number of running processes
 int LinuxParser::RunningProcesses() {
   string line, key, payload;
-  int running_processes;
+  int running_processes{0};
   std::ifstream filestream(kProcDirectory + kStatFilename);
   if (filestream.is_open()) {
     while (std::getline(filestream, line)) {
@@ -317,7 +287,7 @@ string LinuxParser::Uid(int pid) {
 // TODO: Read and return the user associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
 string LinuxParser::User(int pid) {
-  int uid_reference = LinuxParser::Uid(pid);
+  string uid_reference = LinuxParser::Uid(pid);
   string line, user, _toSkip, uid;
   std::ifstream filestream(kPasswordPath);
   if (filestream.is_open()) {
