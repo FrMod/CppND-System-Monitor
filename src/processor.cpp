@@ -9,6 +9,10 @@ float Processor::Utilization() {
   long prev_total_jiffies = this->prev_active_jiffies + this->prev_idle_jiffies;
 
   float utilization = (float)(active_jiffies - prev_active_jiffies) /
-                      (prev_active_jiffies + idle_jiffies + active_jiffies);
-  return 0.0;
+                      (idle_jiffies + active_jiffies - prev_total_jiffies);
+  
+  this->prev_active_jiffies = active_jiffies;
+  this->prev_idle_jiffies = idle_jiffies;
+  
+  return utilization;
 }
