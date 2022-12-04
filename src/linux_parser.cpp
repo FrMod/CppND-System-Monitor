@@ -188,7 +188,7 @@ vector<string> LinuxParser::CpuUtilization() {
 // Read and return the total number of processes
 int LinuxParser::TotalProcesses() {
   string line, key, payload;
-  int total_processes;
+  int total_processes{0};
   std::ifstream filestream(kProcDirectory + kStatFilename);
   if (filestream.is_open()) {
     while (std::getline(filestream, line)) {
@@ -257,6 +257,7 @@ string LinuxParser::Ram(int pid) {
       }
     }
   }
+  
   filestream.close();
   return value;
 }
@@ -310,19 +311,18 @@ string LinuxParser::User(int pid) {
 // REMOVE: [[maybe_unused]] once you define the function
 long LinuxParser::UpTime(int pid) {
   string line;
-  long uptime, to_be_skipped;
+  string uptime, to_be_skipped;
   std::ifstream stream(kProcDirectory + std::to_string(pid) + kStatFilename);
   if (stream.is_open()) {
     std::getline(stream, line);
     std::istringstream linestream(line);
-    int counter{0};
-    while (counter++ < 22) {
+    for(int counter = 0; counter < 21; counter++){
       linestream >> to_be_skipped;
     }
     linestream >> uptime;
     stream.close();
-    return uptime / sysconf(_SC_CLK_TCK);
+    return std::stol(uptime);
   }
   stream.close();
-  return uptime;
+  return std::stol(uptime);
 }
