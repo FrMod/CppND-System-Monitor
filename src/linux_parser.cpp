@@ -252,7 +252,7 @@ string LinuxParser::Ram(int pid) {
       while (linestream >> key >> value) {
         if (key == "VmSize:") {
           filestream.close();
-          return value;
+          return value.substr(0,value.size()-3);  // Return MB instead of KB
         }
       }
     }
