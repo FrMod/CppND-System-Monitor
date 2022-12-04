@@ -331,5 +331,5 @@ long LinuxParser::UpTime(int pid) {
     return sys_uptime - std::stol(uptime) / sysconf(_SC_CLK_TCK);
   }
   stream.close();
-  return std::stol(uptime);
+  return 1;
 }
