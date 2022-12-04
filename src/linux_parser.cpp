@@ -134,7 +134,7 @@ long LinuxParser::Jiffies() {
 long LinuxParser::ActiveJiffies(int pid) {
   string line, key, payload;
   long active_jiffies = 0;
-  long utime, stime, cutime, cstime, to_be_skipped;
+  string utime, stime, cutime, cstime, to_be_skipped;
   std::ifstream stream(kProcDirectory + std::to_string(pid) + kStatFilename);
   if (stream.is_open()) {
     std::getline(stream, line);
@@ -144,7 +144,9 @@ long LinuxParser::ActiveJiffies(int pid) {
       linestream >> to_be_skipped;
     }
     linestream >> utime >> stime >> cutime >> cstime;
-    active_jiffies = (utime + stime + cutime + cstime) / sysconf(_SC_CLK_TCK);
+    active_jiffies = (std::stol(utime) + std::stol(stime) + std::stol(cutime) +
+                      std::stol(cstime)) /
+                     sysconf(_SC_CLK_TCK);
     stream.close();
     return active_jiffies;
   }
@@ -154,16 +156,20 @@ long LinuxParser::ActiveJiffies(int pid) {
 
 // Read and return the number of active jiffies for the system
 long LinuxParser::ActiveJiffies() {
-  auto jiffies  = LinuxParser::CpuUtilization();
-  return std::stol(jiffies[CPUStates::kUser_]) + std::stol(jiffies[CPUStates::kNice_]) +
-        std::stol(jiffies[CPUStates::kSystem_]) + std::stol(jiffies[CPUStates::kIRQ_]) +
-        std::stol(jiffies[CPUStates::kSoftIRQ_]) + std::stol(jiffies[CPUStates::kSteal_]);    
+  auto jiffies = LinuxParser::CpuUtilization();
+  return std::stol(jiffies[CPUStates::kUser_]) +
+         std::stol(jiffies[CPUStates::kNice_]) +
+         std::stol(jiffies[CPUStates::kSystem_]) +
+         std::stol(jiffies[CPUStates::kIRQ_]) +
+         std::stol(jiffies[CPUStates::kSoftIRQ_]) +
+         std::stol(jiffies[CPUStates::kSteal_]);
 }
 
 // TODO: Read and return the number of idle jiffies for the system
 long LinuxParser::IdleJiffies() {
-  auto jiffies  = LinuxParser::CpuUtilization();
-  return std::stol(jiffies[CPUStates::kIdle_]) + std::stol(jiffies[CPUStates::kIOwait_]);  
+  auto jiffies = LinuxParser::CpuUtilization();
+  return std::stol(jiffies[CPUStates::kIdle_]) +
+         std::stol(jiffies[CPUStates::kIOwait_]);
 }
 
 // Read and return CPU utilization
@@ -252,12 +258,12 @@ string LinuxParser::Ram(int pid) {
       while (linestream >> key >> value) {
         if (key == "VmSize:") {
           filestream.close();
-          return value.substr(0,value.size()-3);  // Return MB instead of KB
+          return value.substr(0, value.size() - 3);  // Return MB instead of KB
         }
       }
     }
   }
-  
+
   filestream.close();
   return value;
 }
@@ -316,12 +322,13 @@ long LinuxParser::UpTime(int pid) {
   if (stream.is_open()) {
     std::getline(stream, line);
     std::istringstream linestream(line);
-    for(int counter = 0; counter < 21; counter++){
+    for (int counter = 0; counter < 21; counter++) {
       linestream >> to_be_skipped;
     }
     linestream >> uptime;
     stream.close();
-    return std::stol(uptime);
+    long sys_uptime = LinuxParser::UpTime();
+    return sys_uptime - std::stol(uptime) / sysconf(_SC_CLK_TCK);
   }
   stream.close();
   return std::stol(uptime);
