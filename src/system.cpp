@@ -26,7 +26,15 @@ format. cpp for formatting the uptime.*/
 Processor& System::Cpu() { return cpu_; }
 
 // TODO: Return a container composed of the system's processes
-vector<Process>& System::Processes() { return processes_; }
+vector<Process>& System::Processes() {
+  int i;
+  vector<int> pids = LinuxParser::Pids();  // get all PIDs
+  for (int i = 0; i < pids.size(); ++i) {
+    Process p = Process(pids[i]);
+    processes_.push_back(p);
+  }
+  return processes_;
+}
 
 // Return the system's kernel identifier (string)
 std::string System::Kernel() { return LinuxParser::Kernel(); }
@@ -34,14 +42,14 @@ std::string System::Kernel() { return LinuxParser::Kernel(); }
 // Return the system's memory utilization
 float System::MemoryUtilization() { return LinuxParser::MemoryUtilization(); }
 
-// TODO: Return the operating system name
+// Return the operating system name
 std::string System::OperatingSystem() { return LinuxParser::OperatingSystem(); }
 
-// TODO: Return the number of processes actively running on the system
+// Return the number of processes actively running on the system
 int System::RunningProcesses() { LinuxParser::RunningProcesses(); }
 
-// TODO: Return the total number of processes on the system
+// Return the total number of processes on the system
 int System::TotalProcesses() { LinuxParser::TotalProcesses();}
 
-// TODO: Return the number of seconds since the system started running
+// Return the number of seconds since the system started running
 long int System::UpTime() { return LinuxParser::UpTime(); }
