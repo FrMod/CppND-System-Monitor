@@ -98,7 +98,7 @@ float LinuxParser::MemoryUtilization() {
           }
         }
         // catch invalid_argument exception.
-        catch (const std::invalid_argument) {
+        catch (std::invalid_argument const&) {
           continue;
         }
       }
