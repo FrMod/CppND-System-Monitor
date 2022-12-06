@@ -30,10 +30,10 @@ vector<Process>& System::Processes() {
   vector<int> pids = LinuxParser::Pids();  // get all PIDs
   for (unsigned i = 0; i < pids.size(); ++i) {
     Process p = Process(pids[i]);
-    processes_.push_back(p);
+    this->processes_.push_back(p);
   }
-  std::sort(processes_.begin(), processes_.end());
-  return processes_;
+  std::sort(this->processes_.begin(), this->processes_.end());
+  return this->processes_;
 }
 
 // Return the system's kernel identifier (string)
