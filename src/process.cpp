@@ -20,7 +20,7 @@ int Process::Pid() { return this->pid; }
 float Process::CpuUtilization() { 
   long active_jiffies = LinuxParser::ActiveJiffies(this->pid);
   long time = LinuxParser::UpTime(this->pid);
-  this->cpu_util = (float)(active_jiffies - this->prev_active_jiffies) / (time - this->prev_uptime);
+  this->cpu_util = (float)(active_jiffies - this->prev_active_jiffies) / (float)(time - this->prev_uptime);
   
   this->prev_active_jiffies = active_jiffies;
   this->prev_uptime = time;
